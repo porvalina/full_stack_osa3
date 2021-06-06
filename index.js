@@ -11,24 +11,28 @@ app.use(express.json())
 let persons = [
           {
             "name": "Ada Lovelace",
-            "number": "39-44-5323523",
+            "phonenumber": "39-44-5323523",
             "id": 1
           },
           {
             "name": "Dan Abramov",
-            "number": "12-43-234345",
+            "phonenumber": "12-43-234345",
             "id": 2
           },
           {
             "name": "Mary Poppendieck",
-            "number": "39-23-6423122",
+            "phonenumber": "39-23-6423122",
             "id": 3
           },
         ]
 
-app.get('/', (req, res) => {
+
+app.use(express.static('build'))
+
+const baseUrl = '/api/persons'
+
+app.get(baseUrl, (req, res) => {
   res.json(persons)
-  
 })
 
 app.get('/info', (req, res) => {
@@ -36,21 +40,21 @@ app.get('/info', (req, res) => {
 
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete(`${baseUrl}/:id`, (request, response) => {
     const id = Number(request.params.id)
     persons = persons.filter(person => person.id !== id)
   
     response.status(204).end()
   })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get(`${baseUrl}/:id`, (req, res) => {
     const id = parseInt(req.params.id)
     const person = persons.find(person => person.id === id)
     res.json(person)
   })
 
-app.post('/api/persons', (request, response) => {
-    if (!request.body.name || !request.body.number) {
+app.post(baseUrl, (request, response) => {
+    if (!request.body.name || !request.body.phonenumber) {
         return response.status(400).json({ 
           error: 'name or number missing' 
         })
