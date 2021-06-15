@@ -1,6 +1,9 @@
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
+const Person = require('./models/person')
+require('dotenv').config()
+
 const app = express()
 app.use(
     morgan(':method :url :status :res[content-length] :body - :response-time ms')
@@ -8,31 +11,15 @@ app.use(
 morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 app.use(cors())
 app.use(express.json())
-let persons = [
-          {
-            "name": "Ada Lovelace",
-            "phonenumber": "39-44-5323523",
-            "id": 1
-          },
-          {
-            "name": "Dan Abramov",
-            "phonenumber": "12-43-234345",
-            "id": 2
-          },
-          {
-            "name": "Mary Poppendieck",
-            "phonenumber": "39-23-6423122",
-            "id": 3
-          },
-        ]
-
 
 app.use(express.static('build'))
 
 const baseUrl = '/api/persons'
 
 app.get(baseUrl, (req, res) => {
-  res.json(persons)
+    Person.find({}).then(result => {
+        res.json(result.filter(p => p.name))
+      })
 })
 
 app.get('/info', (req, res) => {
@@ -41,16 +28,26 @@ app.get('/info', (req, res) => {
 })
 
 app.delete(`${baseUrl}/:id`, (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-  
-    response.status(204).end()
-  })
+    Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
 app.get(`${baseUrl}/:id`, (req, res) => {
-    const id = parseInt(req.params.id)
-    const person = persons.find(person => person.id === id)
-    res.json(person)
+    Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        res.json(person)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch(error => {
+      console.log(error)
+      res.status(400).send({ error: 'malformatted id' })
+    })
   })
 
 app.post(baseUrl, (request, response) => {
@@ -80,6 +77,21 @@ app.post(baseUrl, (request, response) => {
     persons = persons.concat(person)
   
     response.json(person)
+  })
+
+  app.put(`${baseUrl}/:id`, (request, res, next) => {
+    const body = request.body
+  
+    const person = {
+      name: body.name,
+      phonenumber: body.phonenumber,
+    }
+  
+    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+      .then(updatedPerson => {
+        res.json(updatedPerson)
+      })
+      .catch(error => next(error))
   })
 
 const PORT = process.env.PORT || 3002
