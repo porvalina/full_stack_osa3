@@ -57,28 +57,28 @@ app.post(baseUrl, (request, response) => {
         })
       }
 
-    const sameNamePersonsArray = persons.filter((p) => {
-        return p.name.toUpperCase().indexOf(request.body.name.toUpperCase()) != -1
+    // const sameNamePersonsArray = persons.filter((p) => {
+    //     return p.name.toUpperCase().indexOf(request.body.name.toUpperCase()) != -1
+    //   })
+  
+    //   if (sameNamePersonsArray.length > 0) {
+    //     return response.status(400).json({ 
+    //         error: 'name must be unique' 
+    //       })
+    //     }
+
+  
+    const body = request.body
+    const person = new Person({
+        name: body.name,
+        phonenumber: body.phonenumber || false,
       })
-  
-      if (sameNamePersonsArray.length > 0) {
-        return response.status(400).json({ 
-            error: 'name must be unique' 
-          })
-        }
-
-    const maxId = persons.length > 0
-      ? Math.max(...persons.map(n => n.id)) 
-      : 0
-  
-    const person = request.body
-    person.id = maxId + 1
-  
-    persons = persons.concat(person)
-  
-    response.json(person)
-  })
-
+    
+      person.save().then(savedPerson => {
+        response.json(savedPerson)
+      })
+    })
+ 
   app.put(`${baseUrl}/:id`, (request, res, next) => {
     const body = request.body
   
