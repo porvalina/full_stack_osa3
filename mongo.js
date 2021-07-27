@@ -8,6 +8,7 @@
 // });
 
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator');
 
 if (process.argv.length < 3) {
   console.log('give password as argument')
@@ -27,7 +28,7 @@ const personSchema = new mongoose.Schema({
   phonenumber: String,
   id: Number,
 })
-
+personSchema.plugin(uniqueValidator);
 const Persons = mongoose.model('Person', personSchema)
 
 if (name == undefined) {

@@ -35,7 +35,7 @@ app.delete(`${baseUrl}/:id`, (request, response) => {
     .catch(error => next(error))
 })
 
-app.get(`${baseUrl}/:id`, (req, res) => {
+app.get(`${baseUrl}/:id`, (req, res, next) => {
     Person.findById(request.params.id)
     .then(person => {
       if (person) {
@@ -48,9 +48,10 @@ app.get(`${baseUrl}/:id`, (req, res) => {
       console.log(error)
       res.status(400).send({ error: 'malformatted id' })
     })
+    .catch(error => next(error))
   })
 
-app.post(baseUrl, (request, response) => {
+app.post(baseUrl, (request, response, next) => {
     if (!request.body.name || !request.body.phonenumber) {
         return response.status(400).json({ 
           error: 'name or number missing' 
@@ -76,7 +77,7 @@ app.post(baseUrl, (request, response) => {
     
       person.save().then(savedPerson => {
         response.json(savedPerson)
-      })
+      }).catch(error => next(error)) 
     })
  
   app.put(`${baseUrl}/:id`, (request, res, next) => {
@@ -93,6 +94,18 @@ app.post(baseUrl, (request, response) => {
       })
       .catch(error => next(error))
   })
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
+    next(error)
+  }  
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3002
 app.listen(PORT, () => {
